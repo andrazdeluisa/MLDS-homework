@@ -7,14 +7,28 @@ import matplotlib.pyplot as plt
 
 def logreg_log_likelihood(beta, X, y):
     tmp = X @ np.transpose(beta)
-    res = -(1-y) @ tmp - np.log(1 + np.exp(-tmp)).sum()
+    res = -(1-y) @ tmp
+    idx = tmp < -50
+    res += tmp[idx].sum()
+    res -= np.log(1 + np.exp(-tmp[~idx])).sum()
+    return res
+
+
+def inv_logit(x):
+    # added after response from assistant
+    pos = x > 0
+    res = np.empty(x.size, dtype=np.float)
+    res[pos] = 1. / (1 + np.exp(-x[pos]))
+    exp_t = np.exp(x[~pos])
+    res[~pos] = exp_t / (1. + exp_t)
     return res
 
 
 def grad(beta, X, y):
-    tmp = y - (1 + np.exp(- X @ np.transpose(beta))) ** (-1)
-    res = np.transpose(X) @ tmp
-    return res
+    # corrected after response from assistant
+    tmp = y - inv_logit(X @ beta)
+    res = - tmp @ X
+    return res / np.linalg.norm(res)
 
 
 def logreg_mle(X, y):
@@ -26,18 +40,18 @@ def logreg_mle(X, y):
         return grad(beta, X, y)
 
     m = np.size(X, axis=1)
-    beta0 = np.ones(m)
+    beta0 = np.ones(m) / 2
     # without gradient of log_likelihood
-    res, _, info = fmin_l_bfgs_b(ll_tmp, beta0, approx_grad=True)
+    #res, _, info = fmin_l_bfgs_b(ll_tmp, beta0, approx_grad=True, maxfun=1e6, maxiter=1e6)
     # with gradient of log-likelihood
-    #res, _, info = fmin_l_bfgs_b(ll_tmp, beta0, grad_tmp)
+    res, _, info = fmin_l_bfgs_b(ll_tmp, beta0, fprime=grad_tmp, maxfun=1e6, maxiter=1e6)
     ncalls = info['funcalls']
     print(ncalls)
     return res
 
 
 def logreg_predict(beta, X):
-    tmp = (1 + np.exp(- X @ beta)) ** (-1)
+    tmp = inv_logit(X @ beta)
     return tmp > 0.5
 
 
@@ -69,8 +83,11 @@ def prepare_data(filename):
         data_np = normalize(data_np)
     nrows = np.size(label)
     ntrain = int(nrows*0.8)
-    train = np.append(data_np[:ntrain, :], np.ones((ntrain, 1)), axis=1)
-    test = np.append(data_np[ntrain:, :], np.ones((nrows - ntrain, 1)), axis=1)
+    # train = np.append(data_np[:ntrain, :], np.ones((ntrain, 1)), axis=1)
+    # test = np.append(data_np[ntrain:, :], np.ones((nrows - ntrain, 1)), axis=1)
+    # correction after response from assistant
+    train = data_np[:ntrain, :]
+    test = data_np[ntrain:, :]
     train_l = label[:ntrain]
     test_l = label[ntrain:]
     return train, test, train_l, test_l
@@ -85,6 +102,9 @@ def logistic_regression(filename):
     for i in range(d):
         train_tmp = polynomial_expansion(train, i)
         test_tmp = polynomial_expansion(test, i)
+        # correction after response from assistant
+        train_tmp = np.append(train_tmp, np.ones((np.shape(train_tmp)[0], 1)), axis=1)
+        test_tmp = np.append(test_tmp, np.ones((np.shape(test_tmp)[0], 1)), axis=1)
         beta = logreg_mle(train_tmp, train_l)
         pred_train = logreg_predict(beta, train_tmp)
         pred_test = logreg_predict(beta, test_tmp)

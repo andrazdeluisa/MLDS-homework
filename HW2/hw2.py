@@ -262,7 +262,7 @@ def split(X, y):
 
 
 if __name__ == '__main__':
-    train, train_l, test, test_l = prepare_data('housing3.csv')
+    train, train_l, test, test_l = prepare_data('HW2/housing3.csv')
     print(hw_tree_full((train, train_l), (test, test_l)))
     print(hw_bagging((train, train_l), (test, test_l)))
     print(hw_cv_min_samples((train, train_l), (test, test_l)))

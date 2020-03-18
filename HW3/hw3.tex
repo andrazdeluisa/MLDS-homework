@@ -1,0 +1,101 @@
+\documentclass[twocolumn, 8pt]{article}
+
+\usepackage[english]{babel} 
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{verbatim}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{titlesec} 
+
+\titleformat{\subsection}[runin]{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\begin{center}
+
+\Large{\textbf{MLDS: Homework 3}} \\
+\textsc{\large{Andraž De Luisa}} \\
+\vspace{6pt}
+\small{\today}
+
+\end{center}
+
+Given a data set with numeric input (independent) variables $x_i$  in and ordinal target (dependent) $y_i$ with $k$ levels, we decide to use ordinal regression: $(y_i|x_i,\beta, t) \sim \text{Categorical}(p_i),$ where $\beta$ is the vector of coefficients, $t$ is a vector of thresholds and $p_i$ is the probability vector defined for each class $j$ as: \\
+
+\begin{math}
+    p_i(j) = \phi (t_j - \beta^T x_i) - \phi (t_{j-1} - \beta^T x_i),
+\end{math} \\
+
+where $\phi$ is the inverse logit function.
+
+\subsection*{Part 1} Derive the log likelihood: \\
+
+\begin{math} 
+    L(\beta, t, y, x) = \prod_{i=1}^n \prod_{j=1}^k p_i(j)^{[y_i == j]}
+\end{math} \\
+
+\begin{math}
+    l(\beta, t, y, x) = \sum_{i=1}^n \sum_{j=1}^k [y_i~==~j] \log(p_i(j)) \\ = \sum_{i=1}^n \log(\phi(t_{y_i} - \beta^T x_i) - \phi(t_{y_i - 1} - \beta^T x_i))
+\end{math}
+
+\subsection*{Part 2} 
+
+We try to predict the students rating of a completed Master's course from the available information. For comparison, beside the ordinal logistic regression model we use also a simple baseline model (which always predicts $p_i = (.15, .1, .05, .4, .3)$) and a random forest. For evaluation and comparison we use the misclassification rates and (mean of) log-losses. The train-test split is set at $80\%$.
+
+\begin{table}[ht]
+    \begin{tabular}{|l|l|l|} \hline
+        & \textbf{Miscl. rate} & \textbf {Log-loss} \\ \hline
+        Ordinal regression & 0.38 & 1.039 \\ \hline
+        Baseline & 0.42 & 1.115 \\ \hline
+        Random forest & 0.38 & 1.018 \\ \hline
+    \end{tabular}
+    \caption{Evaluation and comparison of fitted models}
+    \label{tab:single}
+\end{table}
+
+In table \ref{tab:single} the performances of the models are shown. One single evaluation is not enough to make some precise considerations, but it seems that both the ordinal regression and random forest perform slightly better than the baseline. Some more precise estimations are shown in table \ref{tab:cv}, which presents the results of a 10-fold cross-validation. It becomes clearer that the ordinal regression is actually performing better than the baseline, while the random forests seem worse (and less stable, note the bigger standard error).
+
+\begin{table}[ht]
+    \begin{tabular}{|l|l|l|} \hline
+        & \textbf{Log-loss} & \textbf{Std. error} \\ \hline
+        Ordinal regression & 1.183 & 0.100 \\ \hline
+        Baseline & 1.342 & 0.078 \\ \hline
+        Random forest & 1.593 & 0.678 \\ \hline
+    \end{tabular}
+    \caption{Log-loss estimation obtained from 10-fold cross   validation}
+    \label{tab:cv}
+\end{table}
+
+In table \ref{tab:single} the coefficients of the ordinal regression are presented. As could be expected, the grade obtained in the observed course has the most influence to the students' rating. The grades from the other courses are not so important. Note also the positive influence of the sex feature (male students rate the course higher than female) and negative of the year of studying. 
+
+\begin{table}[ht]
+    \begin{tabular}{|l|l|} \hline
+        \textbf{Feature}   & \textbf{Coefficient} \\ \hline
+        Intercept & 2.136 \\ \hline
+        Age & 0.271 \\ \hline
+        Sex & 1.096 \\ \hline
+        Year & -0.615 \\ \hline
+        X.1 & 1.136 \\ \hline
+        X.2 & 0.170 \\ \hline
+        X.3 & -0.063 \\ \hline
+        X.4 & -0.127 \\ \hline
+        X.5 & 0.201 \\ \hline
+        X.6 & -0.072 \\ \hline
+        X.7 & -0.051 \\ \hline
+        X.8 & -0.027 \\ \hline
+    \end{tabular}
+    \caption{Ordinal logistic regression model coefficients}
+    \label{tab:coeff}
+\end{table}
+
+
+\end{document}
