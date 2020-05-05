@@ -27,15 +27,15 @@ class Tree:
             # create tree with node and 2 children
             lowest_gini = 2
             col, treshold = 0, None
-            y1, y2 = None, None
-            split1, split2 = None, None
+            y1, y2 = [], []
+            split1, split2 = [], []
             # which columns should be searched for the best split
             idxs = self.get_candidate_columns(X, self.rand)
             for idx in idxs:
                 # find best split for each column
                 gini_tmp, treshold_tmp, split_tmp, y1_tmp, y2_tmp = split(X[:, idx], y)
                 # compare with previous best and update if necessary
-                if gini_tmp < lowest_gini:
+                if gini_tmp <= lowest_gini:
                     lowest_gini = gini_tmp
                     col, treshold = idx, treshold_tmp
                     y1, y2 = y1_tmp, y2_tmp
@@ -236,7 +236,7 @@ def d_features(X, rand):
 
 
 def split(X, y):
-    gini = 1
+    gini = 2
     treshold = None
     split = ([], [])
     y1, y2 = [], []
@@ -244,7 +244,10 @@ def split(X, y):
     X = X[sort]
     y = y[sort]
     X_u = np.unique(X)
-    for i in range(len(X_u)):
+    # some corrections after received grade
+    if len(X_u) == 1:
+        return 2, X_u[0], (sort, []), y, y2
+    for i in range(len(X_u) - 1):
         x = X_u[i]
         e = np.where(X == x)[-1][0]
         if e == len(y) - 1:
@@ -252,7 +255,7 @@ def split(X, y):
         y1_tmp = y[:e + 1]
         y2_tmp = y[e + 1:]
         gini_tmp = gini_idx(y1_tmp, y2_tmp)
-        if gini_tmp < gini:
+        if gini_tmp <= gini:
             gini = gini_tmp
             treshold = x
             split = (sort[:e + 1], sort[e + 1:])
