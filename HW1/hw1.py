@@ -46,7 +46,6 @@ def logreg_mle(X, y):
     # with gradient of log-likelihood
     res, _, info = fmin_l_bfgs_b(ll_tmp, beta0, fprime=grad_tmp, maxfun=1e6, maxiter=1e6)
     ncalls = info['funcalls']
-    print(ncalls)
     return res
 
 
